@@ -37,6 +37,7 @@
 from typing import Tuple, Dict, Mapping, Optional
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
+from django.urls import reverse
 from pygeoapi.api import API
 from pygeoapi.openapi import get_oas
 
@@ -491,7 +492,11 @@ def _feed_response(request: HttpRequest, api_definition: str,
                    *args, **kwargs) -> Tuple[Dict, int, str]:
     """Use pygeoapi api to process the input request"""
 
-    api_ = API(settings.PYGEOAPI_CONFIG)
+    # Update server url to match the request in a copy local to this request
+    config = settings.PYGEOAPI_CONFIG.copy()
+    config['server'] = config['server'] | {'url': request.build_absolute_uri(reverse(landing_page).rstrip('/'))}
+
+    api_ = API(config)
     api = getattr(api_, api_definition)
     return api(request, *args, **kwargs)
 

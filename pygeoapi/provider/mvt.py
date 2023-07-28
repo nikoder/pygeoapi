@@ -256,7 +256,7 @@ class MVTProvider(BaseTileProvider):
             base_url = f'{url.scheme}://{url.netloc}'
             with requests.Session() as session:
                 session.get(base_url)
-                resp = session.get(f'{base_url}/{layer}/metadata.json')
+                resp = session.get(f'{base_url}/{layer}.json')
                 resp.raise_for_status()
             metadata_json_content = resp.json()
         else:

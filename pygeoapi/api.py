@@ -2940,7 +2940,7 @@ class API:
             tiles_metadata = p.get_metadata(
                 dataset=dataset, server_url=self.base_url,
                 layer=p.get_layer(), tileset=matrix_id,
-                metadata_format=TilesMetadataFormat.TILEJSON,
+                metadata_format=metadata_format,
                 language=prv_locale)
             metadata = dict()
             metadata['metadata'] = tiles_metadata

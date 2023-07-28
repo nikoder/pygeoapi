@@ -216,7 +216,7 @@ class MVTProvider(BaseTileProvider):
                 session.get(base_url)
                 # A format was specified
                 if format_ is not None:
-                    resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}.{f}{url_query}')  # noqa
+                    resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}.{format_}{url_query}')  # noqa
                 # No format was sepcified (e.g. elasticsearch)
                 else:
                     resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}{url_query}')  # noqa

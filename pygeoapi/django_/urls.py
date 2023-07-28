@@ -143,7 +143,7 @@ urlpatterns = [
     ),
     path(
         'collections/<str:collection_id>/tiles/'\
-        '<str:tileMatrixSetId>/<str:tile_matrix>/<str:tileRow>/<str:tileCol>',
+        '<str:tileMatrixSetId>/<str:tileMatrix>/<str:tileRow>/<str:tileCol>',
         views.collection_item_tiles,
         name='collection-item-tiles',
     ),

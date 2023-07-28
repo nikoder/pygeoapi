@@ -214,10 +214,10 @@ class MVTProvider(BaseTileProvider):
 
             with requests.Session() as session:
                 session.get(base_url)
-                # There is a "." in the url path
-                if '.' in url.path:
+                # A format was specified
+                if format_ is not None:
                     resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}.{f}{url_query}')  # noqa
-                # There is no "." in the url )e.g. elasticsearch)
+                # No format was sepcified (e.g. elasticsearch)
                 else:
                     resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}{url_query}')  # noqa
                 resp.raise_for_status()

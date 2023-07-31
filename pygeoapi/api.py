@@ -2803,7 +2803,7 @@ class API:
         :returns: tuple of headers, status code, content
         """
 
-        format_ = request.format
+        format_ = request.format or 'mvt'
         if not format_:
             return self.get_format_exception(request)
         headers = request.get_response_headers(SYSTEM_LOCALE,

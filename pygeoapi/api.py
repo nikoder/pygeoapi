@@ -2803,9 +2803,6 @@ class API:
         :returns: tuple of headers, status code, content
         """
 
-        format_ = request.format or 'mvt'
-        if not format_:
-            return self.get_format_exception(request)
         headers = request.get_response_headers(SYSTEM_LOCALE,
                                                **self.api_headers)
         LOGGER.debug('Processing tiles')
@@ -2824,8 +2821,9 @@ class API:
                 self.config['resources'][dataset]['providers'], 'tile')
             p = load_plugin('provider', t)
 
-            format_ = p.format_type
-            headers['Content-Type'] = p.mimetype
+            format_ = request.format or p.format_type
+            if not format_:
+                return self.get_format_exception(request)
 
             LOGGER.debug(f'Fetching tileset id {matrix_id} and tile {z_idx}/{y_idx}/{x_idx}')  # noqa
             content = p.get_tiles(layer=p.get_layer(), tileset=matrix_id,
@@ -2835,6 +2833,7 @@ class API:
                 return self.get_exception(
                     HTTPStatus.NOT_FOUND, headers, format_, 'NotFound', msg)
             else:
+                headers['Content-Type'] = p.mimetype
                 return headers, HTTPStatus.OK, content
 
         # @TODO: figure out if the spec requires to return json errors

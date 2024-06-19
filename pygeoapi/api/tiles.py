@@ -210,7 +210,7 @@ def get_collection_tiles_data(
     :returns: tuple of headers, status code, content
     """
 
-    format_ = request.format
+    format_ = request.format or 'mvt'
     if not format_:
         return api.get_format_exception(request)
     headers = request.get_response_headers(SYSTEM_LOCALE,

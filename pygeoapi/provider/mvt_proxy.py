@@ -168,7 +168,7 @@ class MVTProxyProvider(BaseMVTProvider):
             try:
                 with requests.Session() as session:
                     session.get(base_url)
-                    if '.' in url.path:
+                    if format_ is not None:
                         resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}.{format_}{url_query}')  # noqa
                     else:
                         resp = session.get(f'{base_url}/{layer}/{z}/{y}/{x}{url_query}')  # noqa

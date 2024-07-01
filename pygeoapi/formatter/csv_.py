@@ -30,6 +30,7 @@
 import io
 import logging
 
+import shapely.geometry
 import unicodecsv as csv
 
 from pygeoapi.formatter.base import BaseFormatter, FormatterSerializationError
@@ -66,6 +67,8 @@ class CSVFormatter(BaseFormatter):
         :returns: string representation of format
         """
 
+        geometry_field_name = options.get('provider_def', {}).get('geom_field', 'coordinates')
+
         is_point = False
         try:
             fields = list(data['features'][0]['properties'].keys())
@@ -80,8 +83,7 @@ class CSVFormatter(BaseFormatter):
                 fields.insert(1, 'y')
                 is_point = True
             else:
-                # TODO: implement wkt geometry serialization
-                LOGGER.debug('not a point geometry, skipping')
+                fields.insert(0, geometry_field_name)
 
         LOGGER.debug(f'CSV fields: {fields}')
 
@@ -95,6 +97,9 @@ class CSVFormatter(BaseFormatter):
                 if is_point:
                     fp['x'] = feature['geometry']['coordinates'][0]
                     fp['y'] = feature['geometry']['coordinates'][1]
+                else:
+                    if self.geom and feature['geometry'] is not None:
+                        fp[geometry_field_name] = shapely.geometry.shape(feature['geometry']).wkt
                 LOGGER.debug(fp)
                 writer.writerow(fp)
         except ValueError as err:

@@ -96,7 +96,7 @@ class CSVFormatter(BaseFormatter):
 
         try:
             output = io.BytesIO()
-            writer = csv.DictWriter(output, fields)
+            writer = csv.DictWriter(output, fields, quoting=csv.csv.QUOTE_NONNUMERIC)
             writer.writeheader()
 
             for feature in data['features']:

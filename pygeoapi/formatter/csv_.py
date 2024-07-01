@@ -69,6 +69,9 @@ class CSVFormatter(BaseFormatter):
 
         geometry_field_name = options.get('provider_def', {}).get('geom_field', 'coordinates')
 
+        csv_formatting_options = options.get('provider_def', {}).get('csv_formatting_options', {})
+        include_id = csv_formatting_options.get('include_id', True)
+
         is_point = False
         try:
             fields = list(data['features'][0]['properties'].keys())
@@ -85,6 +88,8 @@ class CSVFormatter(BaseFormatter):
             else:
                 fields.insert(0, geometry_field_name)
 
+        if include_id:
+            fields.insert(0, 'id')
         LOGGER.debug(f'CSV fields: {fields}')
 
         try:
@@ -100,6 +105,8 @@ class CSVFormatter(BaseFormatter):
                 else:
                     if self.geom and feature['geometry'] is not None:
                         fp[geometry_field_name] = shapely.geometry.shape(feature['geometry']).wkt
+                if include_id:
+                    fp["id"] = feature["id"]
                 LOGGER.debug(fp)
                 writer.writerow(fp)
         except ValueError as err:

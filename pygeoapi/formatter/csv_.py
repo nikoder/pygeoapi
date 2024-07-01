@@ -82,8 +82,10 @@ class CSVFormatter(BaseFormatter):
         if self.geom:
             LOGGER.debug('Including point geometry')
             if data['features'][0]['geometry']['type'] == 'Point':
-                fields.insert(0, 'x')
-                fields.insert(1, 'y')
+                lat_colname = csv_formatting_options.get('lat_colname', 'x')
+                lon_colname = csv_formatting_options.get('lon_colname', 'y')
+                fields.insert(0, lat_colname)
+                fields.insert(1, lon_colname)
                 is_point = True
             else:
                 fields.insert(0, geometry_field_name)
@@ -100,8 +102,8 @@ class CSVFormatter(BaseFormatter):
             for feature in data['features']:
                 fp = feature['properties']
                 if is_point:
-                    fp['x'] = feature['geometry']['coordinates'][0]
-                    fp['y'] = feature['geometry']['coordinates'][1]
+                    fp[lat_colname] = feature['geometry']['coordinates'][0]
+                    fp[lon_colname] = feature['geometry']['coordinates'][1]
                 else:
                     if self.geom and feature['geometry'] is not None:
                         fp[geometry_field_name] = shapely.geometry.shape(feature['geometry']).wkt

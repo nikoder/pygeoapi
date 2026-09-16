@@ -216,9 +216,6 @@ def get_collection_tiles_data(
     :returns: tuple of headers, status code, content
     """
 
-    format_ = request.format
-    if not format_:
-        return api.get_format_exception(request)
     headers = request.get_response_headers(SYSTEM_LOCALE,
                                            **api.api_headers)
     LOGGER.debug('Processing tiles')
@@ -237,8 +234,11 @@ def get_collection_tiles_data(
             api.config['resources'][dataset]['providers'], 'tile')
         p = load_plugin('provider', t)
 
-        format_ = p.format_type
-        headers['Content-Type'] = t['format']['mimetype']
+        # A request without an explicit format asks for the provider's own,
+        # rather than being refused.
+        format_ = request.format or p.format_type
+        if not format_:
+            return api.get_format_exception(request)
 
         LOGGER.debug(f'Fetching tileset id {matrix_id} and tile {z_idx}/{y_idx}/{x_idx}')  # noqa
         content = p.get_tiles(layer=p.get_layer(), tileset=matrix_id,
@@ -248,6 +248,9 @@ def get_collection_tiles_data(
             return api.get_exception(
                 HTTPStatus.NO_CONTENT, headers, format_, 'NoContent', msg)
         else:
+            # A proxying provider learns the real media type from the
+            # service it fetched from; otherwise the configured one applies.
+            headers['Content-Type'] = getattr(p, 'mimetype', None) or t['format']['mimetype']  # noqa
             return headers, HTTPStatus.OK, content
 
     # @TODO: figure out if the spec requires to return json errors

@@ -86,6 +86,18 @@ class CSVFormatter(BaseFormatter):
 
         :returns: string representation of format
         """
+        # Per-provider CSV options (provider definition key `csv_formatting_options`):
+        #   include_id: bool     - lead each row with the feature id (default False)
+        #   lat_colname / lon_colname: names of the point coordinate columns (default 'x' / 'y';
+        #                          note 'x' is longitude and 'y' latitude in GeoJSON order)
+        #   wkt_colname: str     - name of the WKT column for non-point geometries (default 'wkt')
+        csv_options = (options.get('provider_def') or {}).get('csv_formatting_options') or {}
+        include_id = bool(csv_options.get('include_id', False))
+        x_colname = csv_options.get('lon_colname', 'x')
+        y_colname = csv_options.get('lat_colname', 'y')
+        wkt_colname = csv_options.get('wkt_colname', 'wkt')
+        column_names = {'x': x_colname, 'y': y_colname, 'wkt': wkt_colname}
+
         try:
             fields = list(data['features'][0]['properties'].keys())
         except IndexError:
@@ -96,25 +108,32 @@ class CSVFormatter(BaseFormatter):
             LOGGER.debug('Including point geometry')
             if data['features'][0]['geometry']['type'] == 'Point':
                 LOGGER.debug('point geometry detected, adding x,y columns')
-                fields.insert(0, 'x')
-                fields.insert(1, 'y')
+                fields.insert(0, x_colname)
+                fields.insert(1, y_colname)
                 is_point = True
             else:
                 LOGGER.debug('not a point geometry, adding wkt column')
-                fields.append('wkt')
+                fields.append(wkt_colname)
+
+        if include_id:
+            fields.insert(0, 'id')
 
         LOGGER.debug(f'CSV fields: {fields}')
         output = io.StringIO()
-        writer = csv.DictWriter(output, fields, extrasaction='ignore')
+        writer = csv.DictWriter(output, fields, extrasaction='ignore',
+                                quoting=csv.QUOTE_NONNUMERIC)
         writer.writeheader()
 
         for feature in data['features']:
-            self._add_feature(writer, feature, is_point)
+            self._add_feature(writer, feature, is_point, column_names,
+                              include_id)
 
         return output.getvalue().encode('utf-8')
 
     def _add_feature(
-        self, writer: csv.DictWriter, feature: dict, is_point: bool
+        self, writer: csv.DictWriter, feature: dict, is_point: bool,
+        column_names: dict = {'x': 'x', 'y': 'y', 'wkt': 'wkt'},
+        include_id: bool = False
     ) -> None:
         """
         Add feature data to CSV writer
@@ -122,16 +141,20 @@ class CSVFormatter(BaseFormatter):
         :param writer: CSV DictWriter
         :param feature: dict of GeoJSON feature
         :param is_point: whether the feature is a point geometry
+        :param column_names: names of the 'x', 'y' and 'wkt' columns
+        :param include_id: whether to write the feature id as 'id'
         """
         fp = feature['properties']
         try:
+            if include_id:
+                fp['id'] = feature.get('id')
             if self.geom:
                 if is_point:
-                    fp['x'] = feature['geometry']['coordinates'][0]
-                    fp['y'] = feature['geometry']['coordinates'][1]
-                else:
+                    fp[column_names['x']] = feature['geometry']['coordinates'][0]  # noqa
+                    fp[column_names['y']] = feature['geometry']['coordinates'][1]  # noqa
+                elif feature.get('geometry') is not None:
                     geom = geojson_to_geom(feature['geometry'])
-                    fp['wkt'] = geom.wkt
+                    fp[column_names['wkt']] = geom.wkt
 
             LOGGER.debug(f'Writing feature to row: {fp}')
             writer.writerow(fp)

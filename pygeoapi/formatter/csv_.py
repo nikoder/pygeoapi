@@ -86,12 +86,17 @@ class CSVFormatter(BaseFormatter):
 
         :returns: string representation of format
         """
-        # Per-provider CSV options (provider definition key `csv_formatting_options`):
-        #   include_id: bool     - lead each row with the feature id (default False)
-        #   lat_colname / lon_colname: names of the point coordinate columns (default 'x' / 'y';
-        #                          note 'x' is longitude and 'y' latitude in GeoJSON order)
-        #   wkt_colname: str     - name of the WKT column for non-point geometries (default 'wkt')
-        csv_options = (options.get('provider_def') or {}).get('csv_formatting_options') or {}
+        # Per-provider CSV options (provider definition key
+        # `csv_formatting_options`):
+        #   include_id: bool - lead each row with the feature id
+        #                      (default False)
+        #   lat_colname / lon_colname: names of the point coordinate columns
+        #                      (default 'x' / 'y'; note 'x' is longitude and
+        #                      'y' latitude in GeoJSON order)
+        #   wkt_colname: str - name of the WKT column for non-point
+        #                      geometries (default 'wkt')
+        provider_def = options.get('provider_def') or {}
+        csv_options = provider_def.get('csv_formatting_options') or {}
         include_id = bool(csv_options.get('include_id', False))
         x_colname = csv_options.get('lon_colname', 'x')
         y_colname = csv_options.get('lat_colname', 'y')
